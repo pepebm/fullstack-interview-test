@@ -65,6 +65,32 @@ def pr():
     except Exception as e:
         return jsonify({"error": f"{e}"}), 400
 
+@app.route('/get_pr/<pr_number>', methods=['GET'])
+def get_pr(pr_number):
+    if pr_number:
+        details = repo.get_pull(int(pr_number))
+        assigness = [{"name": assignee.name, "email": assignee.email} for assignee in details.assignees]
+        data = {
+            "author": {"name": details.user.name, "email": details.user.email},
+            "id": details.number,
+            "state": details.state,
+            "title": details.title,
+            "is_merged": details.merged,
+            "merged_at": details.merged_at,
+            "merged_by": {"name": details.merged_by.name, "email": details.merged_by.email},
+            "closed_at": details.closed_at,
+            "created_at": details.created_at,
+            "html_url": details.html_url,
+            "url": details.url,
+            "assigness": assigness,
+            "changed_files": details.changed_files,
+            "additions": details.additions,
+            "deletions": details.deletions
+        }
+        return jsonify({"state": "OK", "pr": data}), 200
+    else:
+        return jsonify({"error": "PR Number was not found in query param"}), 404
+
 
 if __name__ == '__main__':
 	app.run(port=port if port != None else 8000)
