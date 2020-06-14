@@ -48,5 +48,23 @@ def get_branch(branch_name):
         return jsonify({"error": "missing name"}), 404
 
 
+@app.route('/pr', methods=['POST'])
+def pr():
+    try:
+        req_data = request.get_json()
+        if 'direction' in req_data and 'branch' in req_data:
+            data = []
+            for pr in repo.get_pulls(
+                    state='all', direction=req_data['direction'], base=req_data['branch'], sort='created'):
+                author = {"name": pr.user.name, "email": pr.user.email}
+                data.append({"title": pr.title, "description": pr.body,
+                             "status": pr.state, "author": author, "id": pr.number})
+            return jsonify({"status": "OK", "prs": data, "count": len(data)}), 200
+        else:
+            return jsonify({"error": "Direction or Repo not found in body. Expecting JSON."}), 404
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
+
+
 if __name__ == '__main__':
 	app.run(port=port if port != None else 8000)
