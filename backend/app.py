@@ -6,18 +6,19 @@ from os import getenv
 import requests
 
 load_dotenv(find_dotenv(), verbose=True)
-
-app = Flask(__name__)
-
-@app.route('/', methods=['GET'])
-def main():
-    return jsonify({"status": "OK", "message": "hello flat"}), 200
-
 port = getenv('PORT')
 gh_key = getenv('GH_KEY')
 
+repo_name = 'pepebm/fullstack-interview-test'
+app = Flask(__name__)
+g = Github(gh_key)
+repo = g.get_repo(repo_name)
+
+@app.route('/branches', methods=['GET'])
+def branches():
+    data = [branch.name for branch in list(repo.get_branches())]
+    return jsonify({"status": "OK", "branches": data}), 200
+
+
 if __name__ == '__main__':
-    if gh_key != None:
-		app.run(port=port if port != None else 8000)
-	else:
-		print("Error env GH_KEY missing.")
+	app.run(port=port if port != None else 8000)
