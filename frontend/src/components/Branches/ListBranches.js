@@ -14,6 +14,7 @@ import {
   Button
 } from '@material-ui/core';
 import FindInPageIcon from '@material-ui/icons/FindInPage';
+import CompareIcon from '@material-ui/icons/Compare';
 import LoopIcon from '@material-ui/icons/Loop';
 
 import backend from '../../utils/backend';
@@ -25,7 +26,9 @@ class ListBranches extends Component {
     super(props);
 
     this.state = {
-      branches: []
+      branches: [],
+      error: false,
+      errorMsg: ""
     };
   }
 
@@ -34,7 +37,10 @@ class ListBranches extends Component {
     if (res.branches) {
       this.setState({ branches: res.branches })
     } else {
-      console.error(res.error);
+      this.setState({
+        error: true,
+        errorMsg: `${res.error}`
+      });
     }
   }
 
@@ -63,6 +69,16 @@ class ListBranches extends Component {
                   </TableCell>
                   <TableCell align="right">
                     <Button variant="outlined" endIcon={<FindInPageIcon/>}>
+                      <Link 
+                        to={{
+                          pathname: `/branches/${branch.replace("/", "-")}/pr`,
+                          state: branch
+                        }} 
+                        style={{textDecoration: 'none'}}>
+                        See PRs
+                      </Link>
+                    </Button>
+                    <Button variant="outlined" endIcon={<CompareIcon />}>
                       <Link to={`/branches/${branch.replace("/", "-")}`} style={{textDecoration: 'none'}}>
                         See Commits
                       </Link>

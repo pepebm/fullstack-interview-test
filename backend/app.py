@@ -19,45 +19,52 @@ repo = g.get_repo(repo_name)
 
 @app.route('/repo', methods=['GET'])
 def get_repo():
-    return jsonify({"status": "OK", "name": repo_name}), 200
+    try:
+        return jsonify({"status": "OK", "name": repo_name}), 200
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
 
 @app.route('/branches', methods=['GET'])
 def branches():
-    branch_list = list(repo.get_branches())
-    data = [branch.name for branch in branch_list]
-    return jsonify({"status": "OK", "branches": data}), 200
-
+    try:
+        branch_list = list(repo.get_branches())
+        data = [branch.name for branch in branch_list]
+        return jsonify({"status": "OK", "branches": data}), 200
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
 
 @app.route('/branches/get', methods=['POST'])
 def get_branch():
-    req_data = request.get_json()
-    if 'name' in req_data:
-        branch_name = req_data['name']
-        data = []
-        base_url = f"https://github.com/{repo_name}/branch_commits/"
-        branch = repo.get_branch(branch_name)
-        for c in repo.get_commits(sha=branch_name, since=repo.created_at):
-            commit = repo.get_commit(sha=c.sha)
-            query = PyQuery(requests.get(base_url + c.sha).text)
-            current_branch = query.find(".branch").text()
-            if current_branch == branch_name:
-                data.append({
-                    "id": c.sha,
-                    "message": commit.commit.message,
-                    "author": commit.commit.author.email,
-                    "name": commit.commit.author.name,
-                    "timestamp": commit.commit.committer.date,
-                    "url": commit.commit.html_url,
-                    "stats": {
-                        "adds": commit.stats.additions,
-                        "deletes": commit.stats.deletions,
-                        "total": commit.stats.total
-                    }
-                })
-        return jsonify({"status": "OK", "commits": data, "count": len(data)}), 200
-    else:
-        return jsonify({"error": "missing name"}), 404
-
+    try:
+        req_data = request.get_json()
+        if 'name' in req_data:
+            branch_name = req_data['name']
+            data = []
+            base_url = f"https://github.com/{repo_name}/branch_commits/"
+            branch = repo.get_branch(branch_name)
+            for c in repo.get_commits(sha=branch_name, since=repo.created_at):
+                commit = repo.get_commit(sha=c.sha)
+                query = PyQuery(requests.get(base_url + c.sha).text)
+                current_branch = query.find(".branch").text()
+                if current_branch == branch_name:
+                    data.append({
+                        "id": c.sha,
+                        "message": commit.commit.message,
+                        "author": commit.commit.author.email,
+                        "name": commit.commit.author.name,
+                        "timestamp": commit.commit.committer.date,
+                        "url": commit.commit.html_url,
+                        "stats": {
+                            "adds": commit.stats.additions,
+                            "deletes": commit.stats.deletions,
+                            "total": commit.stats.total
+                        }
+                    })
+            return jsonify({"status": "OK", "commits": data, "count": len(data)}), 200
+        else:
+            return jsonify({"error": "missing name"}), 404
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
 
 @app.route('/pr', methods=['POST'])
 def pr():
@@ -66,7 +73,7 @@ def pr():
         if 'branch' in req_data:
             data = []
             for pr in repo.get_pulls(
-                    state='all', direction=req_data['direction'], base='asc', sort='created'):
+                    state='all', direction='asc', base=req_data['branch'], sort='created'):
                 author = {"name": pr.user.name, "email": pr.user.email}
                 data.append({
                     "title": pr.title, 
@@ -81,37 +88,41 @@ def pr():
         else:
             return jsonify({"error": "Direction or Repo not found in body. Expecting JSON."}), 404
     except Exception as e:
-        return jsonify({"error": f"{e}"}), 400
+        return jsonify({"error": f"{e}"}), 406
 
 @app.route('/pr/get/<pr_number>', methods=['GET'])
 def get_pr(pr_number):
-    if pr_number:
-        details = repo.get_pull(int(pr_number))
-        assigness = [{"name": assignee.name, "email": assignee.email} for assignee in details.assignees]
-        data = {
-            "author": {"name": details.user.name, "email": details.user.email},
-            "number": details.number,
-            "id": details.id,
-            "state": details.state,
-            "title": details.title,
-            "is_merged": details.merged,
-            "merged_at": details.merged_at,
-            "merged_by": {"name": details.merged_by.name, "email": details.merged_by.email},
-            "closed_at": details.closed_at,
-            "created_at": details.created_at,
-            "html_url": details.html_url,
-            "url": details.url,
-            "assigness": assigness,
-            "changed_files": details.changed_files,
-            "additions": details.additions,
-            "deletions": details.deletions,
-            "head": {"ref": details.head.ref, "sha": details.head.sha},
-            "base": {"ref": details.base.ref, "sha": details.base.sha},
-            "merge_commit_sha": details.merge_commit_sha
-        }
-        return jsonify({"state": "OK", "pr": data}), 200
-    else:
-        return jsonify({"error": "PR Number was not found in query param"}), 404
+    try:
+        if pr_number:
+            details = repo.get_pull(int(pr_number))
+            assigness = [{"name": assignee.name, "email": assignee.email} for assignee in details.assignees]
+            data = {
+                "author": {"name": details.user.name, "email": details.user.email},
+                "number": details.number,
+                "id": details.id,
+                "state": details.state,
+                "title": details.title,
+                "is_merged": details.merged,
+                "merged_at": details.merged_at,
+                "merged_by": {"name": details.merged_by.name, "email": details.merged_by.email},
+                "closed_at": details.closed_at,
+                "created_at": details.created_at,
+                "html_url": details.html_url,
+                "url": details.url,
+                "assigness": assigness,
+                "changed_files": details.changed_files,
+                "additions": details.additions,
+                "deletions": details.deletions,
+                "head": {"ref": details.head.ref, "sha": details.head.sha},
+                "base": {"ref": details.base.ref, "sha": details.base.sha},
+                "merge_commit_sha": details.merge_commit_sha
+            }
+            return jsonify({"state": "OK", "pr": data}), 200
+        else:
+            return jsonify({"error": "PR Number was not found in query param"}), 404
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
+
 
 @app.route('/pr/create', methods=['POST'])
 def create_pr():

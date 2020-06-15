@@ -28,14 +28,19 @@ const getBranch = async branch => {
 };
 
 const listPr = async branch => {
-  const res = await axios({
-    method: 'post',
-    data: {
-      branch: branch
-    },
-    url: base_url + "/pr"
-  });
-  return res.data;
+  try {
+    const res = await axios({
+      method: 'post',
+      data: {
+        branch: branch
+      },
+      url: base_url + "/pr"
+    });
+    return res.data;
+  } catch (error) {
+    return {error: error}
+  }
+  
 };
 
 const getPr = async prNumber => {

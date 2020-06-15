@@ -22,7 +22,9 @@ class GetBranches extends Component {
   
   state = {
     branchName: this.props.match.params.name.replace("-", "/"),
-    branch: {}
+    branch: {},
+    error: false,
+    errorMsg: ""
   };
 
   getBranch = async (branchName) => {
@@ -32,7 +34,10 @@ class GetBranches extends Component {
         branch: res
       });
     } else {
-      console.error(res.error);
+      this.setState({
+        error: true,
+        errorMsg: `${res.error}`
+      });
     }
   }
 
