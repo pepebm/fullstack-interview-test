@@ -48,5 +48,49 @@ def get_branch(branch_name):
         return jsonify({"error": "missing name"}), 404
 
 
+@app.route('/pr', methods=['POST'])
+def pr():
+    try:
+        req_data = request.get_json()
+        if 'direction' in req_data and 'branch' in req_data:
+            data = []
+            for pr in repo.get_pulls(
+                    state='all', direction=req_data['direction'], base=req_data['branch'], sort='created'):
+                author = {"name": pr.user.name, "email": pr.user.email}
+                data.append({"title": pr.title, "description": pr.body,
+                             "status": pr.state, "author": author, "id": pr.number})
+            return jsonify({"status": "OK", "prs": data, "count": len(data)}), 200
+        else:
+            return jsonify({"error": "Direction or Repo not found in body. Expecting JSON."}), 404
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
+
+@app.route('/get_pr/<pr_number>', methods=['GET'])
+def get_pr(pr_number):
+    if pr_number:
+        details = repo.get_pull(int(pr_number))
+        assigness = [{"name": assignee.name, "email": assignee.email} for assignee in details.assignees]
+        data = {
+            "author": {"name": details.user.name, "email": details.user.email},
+            "id": details.number,
+            "state": details.state,
+            "title": details.title,
+            "is_merged": details.merged,
+            "merged_at": details.merged_at,
+            "merged_by": {"name": details.merged_by.name, "email": details.merged_by.email},
+            "closed_at": details.closed_at,
+            "created_at": details.created_at,
+            "html_url": details.html_url,
+            "url": details.url,
+            "assigness": assigness,
+            "changed_files": details.changed_files,
+            "additions": details.additions,
+            "deletions": details.deletions
+        }
+        return jsonify({"state": "OK", "pr": data}), 200
+    else:
+        return jsonify({"error": "PR Number was not found in query param"}), 404
+
+
 if __name__ == '__main__':
 	app.run(port=port if port != None else 8000)
