@@ -31,11 +31,10 @@ function App() {
         <Grid item xs={12}>
           <Navbar />
           <Route exact path="/" render={() => <ListBranches/>} />
-          <Route path="/branches/:number" render={() => <GetBranches/>} />
-          <Route path="/commits/" render={() => <GetCommit/>} />
-          <Route path="/pr" render={() => <ListPR/>} />
-          <Route path="/pr/:number" render={() => <GetPR/>} />
-          <Route path="/pr/create" render={() => <CreatePR/>} />
+          <Route exact path="/branches/:name" render={() => <GetBranches/>} />
+          <Route exact path="/pr" render={() => <ListPR/>} />
+          <Route exact path="/pr/view/:number" render={() => <GetPR/>} />
+          <Route exact path="/pr/create" render={() => <CreatePR/>} />
         </Grid>
       </Grid>
     </Switch>

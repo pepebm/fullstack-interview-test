@@ -3,3 +3,4 @@ flask-mongoengine
 PyGithub
 PyQuery
 python-dotenv
+flask-cors
