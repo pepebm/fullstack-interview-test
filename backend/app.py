@@ -20,7 +20,7 @@ def branches():
     return jsonify({"status": "OK", "branches": data}), 200
 
 
-@app.route('/get_branch/<branch_name>', methods=['GET'])
+@app.route('/branches/get/<branch_name>', methods=['GET'])
 def get_branch(branch_name):
     if branch_name:
         data = []
@@ -57,22 +57,30 @@ def pr():
             for pr in repo.get_pulls(
                     state='all', direction=req_data['direction'], base=req_data['branch'], sort='created'):
                 author = {"name": pr.user.name, "email": pr.user.email}
-                data.append({"title": pr.title, "description": pr.body,
-                             "status": pr.state, "author": author, "id": pr.number})
+                data.append({
+                    "title": pr.title, 
+                    "description": pr.body,
+                    "status": pr.state, 
+                    "author": author, 
+                    "number": pr.number, 
+                    "id": pr.id,
+                    "merge_commit_sha": pr.merge_commit_sha
+                })
             return jsonify({"status": "OK", "prs": data, "count": len(data)}), 200
         else:
             return jsonify({"error": "Direction or Repo not found in body. Expecting JSON."}), 404
     except Exception as e:
         return jsonify({"error": f"{e}"}), 400
 
-@app.route('/get_pr/<pr_number>', methods=['GET'])
+@app.route('/pr/get/<pr_number>', methods=['GET'])
 def get_pr(pr_number):
     if pr_number:
         details = repo.get_pull(int(pr_number))
         assigness = [{"name": assignee.name, "email": assignee.email} for assignee in details.assignees]
         data = {
             "author": {"name": details.user.name, "email": details.user.email},
-            "id": details.number,
+            "number": details.number,
+            "id": details.id,
             "state": details.state,
             "title": details.title,
             "is_merged": details.merged,
@@ -85,12 +93,57 @@ def get_pr(pr_number):
             "assigness": assigness,
             "changed_files": details.changed_files,
             "additions": details.additions,
-            "deletions": details.deletions
+            "deletions": details.deletions,
+            "head": {"ref": details.head.ref, "sha": details.head.sha},
+            "base": {"ref": details.base.ref, "sha": details.base.sha},
+            "merge_commit_sha": details.merge_commit_sha
         }
         return jsonify({"state": "OK", "pr": data}), 200
     else:
         return jsonify({"error": "PR Number was not found in query param"}), 404
 
+@app.route('/pr/create', methods=['POST'])
+def create_pr():
+    try:
+        req_data = request.get_json()
+        if 'title' in req_data and 'body' in req_data and 'base' in req_data and 'head' in req_data and 'body' in req_data:
+            pull_request = repo.create_pull(title=req_data['title'], body=req_data['body'], head=req_data['head'], base=req_data['base'])
+            data = {
+                "author": {"name": pull_request.user.name, "email": pull_request.user.email},
+                "number": pull_request.number,
+                "id": pull_request.id,
+                "state": pull_request.state,
+                "title": pull_request.title,
+                "created_at": pull_request.created_at,
+                "html_url": pull_request.html_url,
+                "url": pull_request.url,
+                "changed_files": pull_request.changed_files,
+                "additions": pull_request.additions,
+                "deletions": pull_request.deletions,
+                "head": {"ref": pull_request.head.ref, "sha": pull_request.head.sha},
+                "base": {"ref": pull_request.base.ref, "sha": pull_request.base.sha},
+                "merge_commit_sha": pull_request.merge_commit_sha
+            }
+            return jsonify({"state": "OK", "pr": data}), 200
+        else:
+            return jsonify({"error": "Insufficent info found in body. Expecting JSON.", "body": req_data}), 404
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
+
+@app.route('/pr/make', methods=['POST'])
+def make_pr():
+    try:
+        req_data = request.get_json()
+        if 'message' in req_data and 'title' in req_data and 'id' in req_data:
+            pull_request = repo.get_pull(int(req_data['id']))
+            if not pull_request.mergeable:
+                raise Exception("Pull Request not mergable")
+            merge = pull_request.merge(commit_message=req_data['message'], commit_title=req_data['title'], merge_method='merge')
+            return jsonify({"status": "OK", "pr": { "merged": merge.merged, "message": merge.message, "id": merge.sha}}), 200
+        else:
+            return jsonify({"error": "Direction or Repo not found in body. Expecting JSON."}), 404
+    except Exception as e:
+        return jsonify({"error": f"{e}"}), 400
 
 if __name__ == '__main__':
 	app.run(port=port if port != None else 8000)
