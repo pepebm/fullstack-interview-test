@@ -9,16 +9,22 @@ import requests
 load_dotenv(find_dotenv(), verbose=True)
 port = getenv('PORT')
 gh_key = getenv('GH_KEY')
+repo_name = getenv('REPO_NAME')
 
-repo_name = 'pepebm/fullstack-interview-test'
 app = Flask(__name__)
 CORS(app)
+
 g = Github(gh_key)
 repo = g.get_repo(repo_name)
 
+@app.route('/repo', methods=['GET'])
+def get_repo():
+    return jsonify({"status": "OK", "name": repo_name}), 200
+
 @app.route('/branches', methods=['GET'])
 def branches():
-    data = [branch.name for branch in list(repo.get_branches())]
+    branch_list = list(repo.get_branches())
+    data = [branch.name for branch in branch_list]
     return jsonify({"status": "OK", "branches": data}), 200
 
 
@@ -54,10 +60,10 @@ def get_branch(branch_name):
 def pr():
     try:
         req_data = request.get_json()
-        if 'direction' in req_data and 'branch' in req_data:
+        if 'branch' in req_data:
             data = []
             for pr in repo.get_pulls(
-                    state='all', direction=req_data['direction'], base=req_data['branch'], sort='created'):
+                    state='all', direction=req_data['direction'], base='asc', sort='created'):
                 author = {"name": pr.user.name, "email": pr.user.email}
                 data.append({
                     "title": pr.title, 
@@ -108,7 +114,7 @@ def get_pr(pr_number):
 def create_pr():
     try:
         req_data = request.get_json()
-        if 'title' in req_data and 'body' in req_data and 'base' in req_data and 'head' in req_data and 'body' in req_data:
+        if 'title' in req_data and 'body' in req_data and 'base' in req_data and 'head' in req_data:
             pull_request = repo.create_pull(title=req_data['title'], body=req_data['body'], head=req_data['head'], base=req_data['base'])
             data = {
                 "author": {"name": pull_request.user.name, "email": pull_request.user.email},
