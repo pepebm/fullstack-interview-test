@@ -20,8 +20,9 @@ const listBranches = async () => {
 
 const getBranch = async branch => {
   const res = await axios({
-    method: 'get',
-    url: `${base_url}/branches/get/${branch}"`
+    method: 'post',
+    data: { name: branch },
+    url: `${base_url}/branches/get`
   });
   return res.data;
 };

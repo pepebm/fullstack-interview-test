@@ -63,7 +63,7 @@ class ListBranches extends Component {
                   </TableCell>
                   <TableCell align="right">
                     <Button variant="outlined" endIcon={<FindInPageIcon/>}>
-                      <Link to={`/branches/${branch}`} style={{textDecoration: 'none'}}>
+                      <Link to={`/branches/${branch.replace("/", "-")}`} style={{textDecoration: 'none'}}>
                         See Commits
                       </Link>
                     </Button>

@@ -28,9 +28,11 @@ def branches():
     return jsonify({"status": "OK", "branches": data}), 200
 
 
-@app.route('/branches/get/<branch_name>', methods=['GET'])
-def get_branch(branch_name):
-    if branch_name:
+@app.route('/branches/get', methods=['POST'])
+def get_branch():
+    req_data = request.get_json()
+    if 'name' in req_data:
+        branch_name = req_data['name']
         data = []
         base_url = f"https://github.com/{repo_name}/branch_commits/"
         branch = repo.get_branch(branch_name)
@@ -45,9 +47,10 @@ def get_branch(branch_name):
                     "author": commit.commit.author.email,
                     "name": commit.commit.author.name,
                     "timestamp": commit.commit.committer.date,
+                    "url": commit.commit.html_url,
                     "stats": {
                         "adds": commit.stats.additions,
-                        "delelets": commit.stats.deletions,
+                        "deletes": commit.stats.deletions,
                         "total": commit.stats.total
                     }
                 })
