@@ -15,8 +15,6 @@ const useStyles = makeStyles({
   boxLinks: {
     marginLeft: "auto",
     marginRight: -12
-  },
-  toolbar: {
   }
 });
 
@@ -25,7 +23,7 @@ function Navbar() {
 
   return (
     <AppBar position="static" className={classes.root}>
-        <Toolbar className={classes.toolbar}>
+        <Toolbar>
           <Typography variant="h6">
             Flat Interview
           </Typography>

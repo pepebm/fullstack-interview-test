@@ -3,6 +3,7 @@ from github import Github
 from pyquery import PyQuery
 from dotenv import load_dotenv, find_dotenv
 from os import getenv
+from flask_cors import CORS
 import requests
 
 load_dotenv(find_dotenv(), verbose=True)
@@ -11,6 +12,7 @@ gh_key = getenv('GH_KEY')
 
 repo_name = 'pepebm/fullstack-interview-test'
 app = Flask(__name__)
+CORS(app)
 g = Github(gh_key)
 repo = g.get_repo(repo_name)
 
