@@ -22,7 +22,9 @@ class GetBranches extends Component {
   
   state = {
     branchName: this.props.match.params.name.replace("-", "/"),
-    branch: {}
+    branch: {},
+    error: false,
+    errorMsg: ""
   };
 
   getBranch = async (branchName) => {
@@ -32,7 +34,10 @@ class GetBranches extends Component {
         branch: res
       });
     } else {
-      console.error(res.error);
+      this.setState({
+        error: true,
+        errorMsg: `${res.error}`
+      });
     }
   }
 
@@ -56,7 +61,7 @@ class GetBranches extends Component {
                 <p>Branch Name: {branchName}</p>
                 <p>Commits: {branch.count}</p>
                 <TableContainer component={Paper}>
-                  <Table aria-label="Branch table">
+                  <Table aria-label="Branch table" size="small">
                     <TableHead>
                       <TableRow>
                         <TableCell>Author</TableCell>
