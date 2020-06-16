@@ -1,5 +1,6 @@
 flask
 flask-mongoengine
+pymongo[srv]
 PyGithub
 PyQuery
 python-dotenv

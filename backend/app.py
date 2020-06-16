@@ -4,16 +4,27 @@ from pyquery import PyQuery
 from dotenv import load_dotenv, find_dotenv
 from os import getenv
 from flask_cors import CORS
+from database.db import initialize_db
+from database.models import Pr
 import requests
 
+# ENV Vars
 load_dotenv(find_dotenv(), verbose=True)
 port = getenv('PORT')
 gh_key = getenv('GH_KEY')
 repo_name = getenv('REPO_NAME')
+db_pwd = getenv('DB_PWD')
 
+# Flask config
 app = Flask(__name__)
 CORS(app)
 
+# Database Connection
+DB_URI = f"mongodb+srv://USRMONG:{db_pwd}>@flat-interview-5se22.mongodb.net/FLAT-INTERVIEW?retryWrites=true&w=majority"
+app.config["MONGODB_HOST"] = DB_URI
+initialize_db(app)
+
+# Github Module Config
 g = Github(gh_key)
 repo = g.get_repo(repo_name)
 
