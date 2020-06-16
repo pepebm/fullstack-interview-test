@@ -10,7 +10,6 @@ import GetBranches from './Branches/GetBranches';
 import ListBranches from './Branches/ListBranches';
 
 import CreatePR from './PR/CreatePR';
-import GetPR from './PR/GetPR';
 import ListPR from './PR/ListPR';
 
 import './App.css';
@@ -31,7 +30,6 @@ function App() {
           <Route exact path="/" render={() => <ListBranches/>} />
           <Route exact path="/branches/:name" render={() => <GetBranches/>} />
           <Route exact path="/branches/:name/pr" render={() => <ListPR/>} />
-          <Route exact path="/branches/:name/pr/:number" render={() => <GetPR/>} />
           <Route exact path="/pr/create" render={() => <CreatePR/>} />
         </Grid>
       </Grid>

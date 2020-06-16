@@ -46,7 +46,7 @@ const listPr = async branch => {
 const getPr = async prNumber => {
   const res = await axios({
     method: 'get',
-    url: `${base_url}/pr/get/${prNumber}"`
+    url: `${base_url}/pr/get/${prNumber}`
   });
   return res.data;
 };
@@ -60,7 +60,7 @@ const createPr = async (title, body, base, head) => {
       base: base,
       head: head
     },
-    url: `${base_url}/pr/create"`
+    url: `${base_url}/pr/create`
   });
   return res.data;
 };
@@ -73,7 +73,7 @@ const makePr = async (message, title, pr_id) => {
       message: message,
       id: pr_id
     },
-    url: `${base_url}/pr/make"`
+    url: `${base_url}/pr/make`
   });
   return res.data;
 };

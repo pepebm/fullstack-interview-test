@@ -3,6 +3,9 @@ import {
   Link,
   withRouter
 } from 'react-router-dom';
+
+import prettyPrintJson from 'pretty-print-json';
+
 import {
   Table,
   TableBody,
@@ -11,7 +14,8 @@ import {
   TableHead,
   TableRow,
   Paper,
-  Button
+  Button,
+  Popover
 } from '@material-ui/core';
 import FindInPageIcon from '@material-ui/icons/FindInPage';
 import LoopIcon from '@material-ui/icons/Loop';
@@ -34,7 +38,12 @@ class ListPR extends Component {
       const res = await backend.listPr(this.state.branchName);
       if (res.prs) {
         res.prs.length > 0 ? this.setState({
-          prs: res.prs
+          // add element to create popover
+          prs: res.prs.map(el => {
+            let obj = Object.assign({}, el);
+            obj.anchorEl = null;
+            return obj;
+          })
         }) : this.setState({
           prs: res.prs,
           empty: true
@@ -51,7 +60,41 @@ class ListPR extends Component {
         errorMsg: `${error.error}`
       });
     }
-    
+  }
+
+  mergePr = async (message, title, id) => {
+    const res = await backend.makePr(message, title, id);
+    if (res.status){
+      this.getPrs();
+    } else {
+      console.error(res.error);
+    }
+  }
+
+  detailsPr = async id => {
+    const res = await backend.getPr(id);
+    console.log(res);
+    return res.state ? res.pr : res.error
+  }
+
+  openPopover = async (e, number) => {
+    const { prs } = this.state;
+    let newPrs = prs,
+        targetIndex = prs.findIndex(pr => pr.number === number);
+    newPrs[targetIndex].anchorEl = e.currentTarget;
+    newPrs[targetIndex].details = newPrs[targetIndex].details ? newPrs[targetIndex].details :  await this.detailsPr(number);
+    this.setState({
+      prs: newPrs
+    });
+  }
+
+  closePopover = (id) => {
+    const { prs } = this.state;
+    let newPrs = prs;
+    newPrs[prs.findIndex(pr => pr.id === id)].anchorEl = null;
+    this.setState({
+      prs: newPrs
+    });
   }
 
   componentDidMount() {
@@ -59,7 +102,7 @@ class ListPR extends Component {
   }
 
   render(){
-    const { prs, empty } = this.state;
+    const { prs, empty, branchName } = this.state;
 
     return(
       <TableContainer component={Paper}>
@@ -94,11 +137,46 @@ class ListPR extends Component {
                     {pr.status}
                   </TableCell>
                   <TableCell align="right">
-                    <Button variant="outlined" endIcon={<FindInPageIcon/>}>
-                      <Link to={`/branches/`} style={{textDecoration: 'none'}}>
-                        See Commits
-                      </Link>
+                    {pr.status === "open" ? 
+                      <Button 
+                        variant="outlined" 
+                        endIcon={<FindInPageIcon/>}
+                        onClick={() => this.mergePr(pr.message, pr.title, pr.id)}  
+                      >
+                        Merge                        
+                      </Button> : ""
+                    }
+                    <Button 
+                      variant="outlined" 
+                      endIcon={<FindInPageIcon />} 
+                      aria-describedby={pr.id} 
+                      color="primary"
+                      onClick={async (e) => { await this.openPopover(e, pr.number)}}>
+                      See details
                     </Button>
+                    <Popover 
+                        id={pr.id}
+                        open={(pr.anchorEl) ? Boolean(pr.anchorEl) : false}
+                        onClose={() => this.closePopover(pr.id)}
+                        style={{textDecoration: 'none'}}
+                        anchorEl={(pr.anchorEl ? pr.anchorEl : null)}
+                        anchorOrigin={{
+                          vertical: 'top',
+                          horizontal: 'left',
+                        }}
+                        transformOrigin={{
+                          vertical: 'top',
+                          horizontal: 'left',
+                        }}
+                      >
+                        <pre>
+                          {
+                            pr.details ? 
+                              JSON.stringify(pr.details, null, 4)
+                              : "Loading..."
+                          }
+                        </pre>
+                      </Popover>
                   </TableCell>
                 </TableRow>
               )) : (empty) ? 

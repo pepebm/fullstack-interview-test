@@ -61,7 +61,7 @@ class GetBranches extends Component {
                 <p>Branch Name: {branchName}</p>
                 <p>Commits: {branch.count}</p>
                 <TableContainer component={Paper}>
-                  <Table aria-label="Branch table">
+                  <Table aria-label="Branch table" size="small">
                     <TableHead>
                       <TableRow>
                         <TableCell>Author</TableCell>
