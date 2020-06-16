@@ -158,8 +158,6 @@ def make_pr():
         req_data = request.get_json()
         if 'message' in req_data and 'title' in req_data and 'id' in req_data:
             pull_request = repo.get_pull(int(req_data['id']))
-            if not pull_request.mergeable:
-                raise Exception("Pull Request not mergable")
             merge = pull_request.merge(commit_message=req_data['message'], commit_title=req_data['title'], merge_method='merge')
             return jsonify({"status": "OK", "pr": { "merged": merge.merged, "message": merge.message, "id": merge.sha}}), 200
         else:
