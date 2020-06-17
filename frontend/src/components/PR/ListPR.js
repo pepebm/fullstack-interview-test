@@ -141,7 +141,7 @@ class ListPR extends Component {
                       <Button 
                         variant="outlined" 
                         endIcon={<FindInPageIcon/>}
-                        onClick={() => this.mergePr(pr.message, pr.title, pr.id)}  
+                        onClick={() => this.mergePr(pr.message || '', pr.title || '', pr.id)}  
                       >
                         Merge                        
                       </Button> : ""
