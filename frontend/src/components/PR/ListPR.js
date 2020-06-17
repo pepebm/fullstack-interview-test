@@ -1,10 +1,7 @@
 import React, { Component } from 'react';
 import {
-  Link,
   withRouter
 } from 'react-router-dom';
-
-import prettyPrintJson from 'pretty-print-json';
 
 import {
   Table,
