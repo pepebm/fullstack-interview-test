@@ -1,0 +1,21 @@
+version: '1'
+ 
+services:
+  server:
+    build: ./backend/
+    command: python app.py run -h 0.0.0.0
+    ports: 
+      - 8001:8001
+    env_file:
+      - ./.env
+  client:
+      build:
+        context: ./frontend/
+      command: npm start
+      volumes:
+        - ./frontend/:/usr/app
+        - /usr/app/node_modules
+      depends_on:
+        - server
+      ports:
+        - 3000:3000

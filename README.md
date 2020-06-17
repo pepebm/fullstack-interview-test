@@ -1,3 +1,24 @@
+# Description
+
+- Front End
+
+This was built with React using material ui as the css framework.
+
+How to Run it?
+
+Node is required. That being said, run cd frontend && npm install && npm start.
+
+
+- Back End
+
+Using Python's lightweight API, Flask. The Database was created with MongoDB for its ease of use. This DB was created on mlab platform (DaaS) for simplicity.
+
+How to Run it?
+
+Python3.7 is required. That being said, run cd backend && python3 -m venv venv && . venv/bin/activate && venv/bin/pip3 install -r requirements.txt
+
+Cheers
+
 # fullstack-interview-test
 Interview test for fullstack Software Engineers
 
