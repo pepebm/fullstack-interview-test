@@ -190,7 +190,7 @@ def make_pr():
                 db_obj = f"db_error"
             return jsonify({"status": "OK", "pr": { "merged": merge.merged, "message": merge.message, "id": merge.sha}, "db_id": db_obj.id if hasattr(db_obj, 'id') else db_obj}), 200
         else:
-            return jsonify({"error": "Direction or Repo not found in body. Expecting JSON."}), 404
+            return jsonify({"error": "Missing data in body. Expecting JSON."}), 404
     except Exception as e:
         return jsonify({"error": f"{e}"}), 400
 
