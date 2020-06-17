@@ -6,6 +6,8 @@ from os import getenv
 from flask_cors import CORS
 from database.db import initialize_db
 from database.models import Pr
+from database.utils import pr_json_create
+from urllib.parse import quote
 import requests
 
 # ENV Vars
@@ -13,14 +15,16 @@ load_dotenv(find_dotenv(), verbose=True)
 port = getenv('PORT')
 gh_key = getenv('GH_KEY')
 repo_name = getenv('REPO_NAME')
-db_pwd = getenv('DB_PWD')
+db_pwd = quote(getenv('DB_PWD'))
+db_usr = quote('flat')
+db_name = quote('flatinterview')
 
 # Flask config
 app = Flask(__name__)
 CORS(app)
 
-# Database Connection
-DB_URI = f"mongodb+srv://USRMONG:{db_pwd}>@flat-interview-5se22.mongodb.net/FLAT-INTERVIEW?retryWrites=true&w=majority"
+# Database Connection - 
+DB_URI = f"mongodb://{db_usr}:{db_pwd}@ds363098.mlab.com:63098/{db_name}?ssl=false"
 app.config["MONGODB_HOST"] = DB_URI
 initialize_db(app)
 
@@ -84,7 +88,7 @@ def pr():
         if 'branch' in req_data:
             data = []
             for pr in repo.get_pulls(
-                    state='all', direction='asc', base=req_data['branch'], sort='created'):
+                    state='all', direction='desc', base=req_data['branch'], sort='created'):
                 author = {"name": pr.user.name, "email": pr.user.email}
                 data.append({
                     "title": pr.title, 
@@ -115,7 +119,7 @@ def get_pr(pr_number):
                 "title": details.title,
                 "is_merged": details.merged,
                 "merged_at": details.merged_at,
-                "merged_by": {"name": details.merged_by.name, "email": details.merged_by.email},
+                "merged_by": {"name": details.merged_by.name, "email": details.merged_by.email} if hasattr(details.merged_by, 'name') else 'Not Merged',
                 "closed_at": details.closed_at,
                 "created_at": details.created_at,
                 "html_url": details.html_url,
@@ -128,7 +132,12 @@ def get_pr(pr_number):
                 "base": {"ref": details.base.ref, "sha": details.base.sha},
                 "merge_commit_sha": details.merge_commit_sha
             }
-            return jsonify({"state": "OK", "pr": data}), 200
+            try:
+                db_obj = Pr.objects.get(number=details.number)
+            except Exception as db_error:
+                db_obj = 'Not saved'
+            
+            return jsonify({"state": "OK", "pr": data, "db_id": db_obj.id if hasattr(db_obj, 'id') else db_obj}), 200
         else:
             return jsonify({"error": "PR Number was not found in query param"}), 404
     except Exception as e:
@@ -157,7 +166,12 @@ def create_pr():
                 "base": {"ref": pull_request.base.ref, "sha": pull_request.base.sha},
                 "merge_commit_sha": pull_request.merge_commit_sha
             }
-            return jsonify({"state": "OK", "pr": data}), 200
+            try:
+                db_obj = Pr(**pr_json_create(pull_request)).save()
+            except Exception as db_error:
+                db_obj = f"{db_error}"
+            
+            return jsonify({"state": "OK", "pr": data, "db_id": db_obj.id if hasattr(db_obj, 'id') else db_obj}), 200
         else:
             return jsonify({"error": "Insufficent info found in body. Expecting JSON.", "body": req_data}), 404
     except Exception as e:
@@ -170,7 +184,11 @@ def make_pr():
         if 'message' in req_data and 'title' in req_data and 'id' in req_data:
             pull_request = repo.get_pull(int(req_data['id']))
             merge = pull_request.merge(commit_message=req_data['message'], commit_title=req_data['title'], merge_method='merge')
-            return jsonify({"status": "OK", "pr": { "merged": merge.merged, "message": merge.message, "id": merge.sha}}), 200
+            try:
+                db_obj = Pr.objects.get(number=req_data['id']).update_one(status='closed')
+            except Exception as db_error:
+                db_obj = f"db_error"
+            return jsonify({"status": "OK", "pr": { "merged": merge.merged, "message": merge.message, "id": merge.sha}, "db_id": db_obj.id if hasattr(db_obj, 'id') else db_obj}), 200
         else:
             return jsonify({"error": "Direction or Repo not found in body. Expecting JSON."}), 404
     except Exception as e:
